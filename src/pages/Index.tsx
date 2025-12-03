@@ -75,6 +75,7 @@ const Index = () => {
   const [activeSection, setActiveSection] = useState<'bio' | 'portfolio' | 'contacts'>('bio');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [bioPhoto, setBioPhoto] = useState(() => 
     loadFromStorage('bioPhoto', 'https://cdn.poehali.dev/projects/c7902632-2ef1-44a0-8709-52591db735a8/files/749acd74-23a3-4b27-a87a-733a0d98e9f8.jpg')
   );
@@ -168,18 +169,27 @@ const Index = () => {
         className="hidden"
       />
       <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <h1 
-              className="text-2xl font-light tracking-wider cursor-pointer hover:opacity-60 transition-opacity"
+              className="text-lg sm:text-2xl font-light tracking-wider cursor-pointer hover:opacity-60 transition-opacity"
               onClick={() => {
                 setSelectedProject(null);
                 scrollToSection('bio');
+                setMobileMenuOpen(false);
               }}
             >
               АЛИСА МЕЛИКОВА
             </h1>
-            <div className="flex items-center gap-3">
+            
+            <button
+              className="lg:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <Icon name={mobileMenuOpen ? 'X' : 'Menu'} size={24} />
+            </button>
+
+            <div className="hidden lg:flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
@@ -189,7 +199,7 @@ const Index = () => {
                 <span className="ml-2">{editMode ? 'Готово' : 'Редактировать'}</span>
               </Button>
             </div>
-            <div className="flex gap-12">
+            <div className="hidden lg:flex gap-12">
               <button
                 onClick={() => scrollToSection('bio')}
                 className={`text-sm tracking-wide transition-opacity ${activeSection === 'bio' ? 'opacity-100' : 'opacity-40'} hover:opacity-100`}
@@ -211,11 +221,56 @@ const Index = () => {
             </div>
           </div>
         </div>
+        
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-white border-t border-gray-100 animate-fade-in">
+            <div className="px-4 py-4 space-y-4">
+              <button
+                onClick={() => {
+                  scrollToSection('bio');
+                  setMobileMenuOpen(false);
+                }}
+                className={`block w-full text-left py-2 text-sm tracking-wide ${activeSection === 'bio' ? 'opacity-100' : 'opacity-40'}`}
+              >
+                Биография
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('portfolio');
+                  setMobileMenuOpen(false);
+                }}
+                className={`block w-full text-left py-2 text-sm tracking-wide ${activeSection === 'portfolio' ? 'opacity-100' : 'opacity-40'}`}
+              >
+                Портфолио
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('contacts');
+                  setMobileMenuOpen(false);
+                }}
+                className={`block w-full text-left py-2 text-sm tracking-wide ${activeSection === 'contacts' ? 'opacity-100' : 'opacity-40'}`}
+              >
+                Контакты
+              </button>
+              <div className="pt-2 border-t border-gray-100">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditMode(!editMode)}
+                  className="w-full justify-start"
+                >
+                  <Icon name={editMode ? 'Check' : 'Edit'} size={18} />
+                  <span className="ml-2">{editMode ? 'Готово' : 'Редактировать'}</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {selectedProject && currentProject ? (
-        <div className="pt-32 pb-24 animate-fade-in">
-          <div className="max-w-6xl mx-auto px-6">
+        <div className="pt-24 sm:pt-32 pb-12 sm:pb-24 animate-fade-in">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <Button
               variant="ghost"
               onClick={() => setSelectedProject(null)}
@@ -225,7 +280,7 @@ const Index = () => {
               <span className="ml-2">Назад к портфолио</span>
             </Button>
 
-            <h2 className="text-5xl font-light mb-8">{currentProject.title}</h2>
+            <h2 className="text-3xl sm:text-5xl font-light mb-6 sm:mb-8">{currentProject.title}</h2>
             {editMode ? (
               <Textarea
                 value={getProjectDescription(currentProject.id)}
@@ -239,7 +294,7 @@ const Index = () => {
               </p>
             )}
 
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
               {getProjectPhotos(currentProject.id).map((photo, index) => (
                 <div key={index} className="aspect-[4/3] bg-gray-100 rounded-sm overflow-hidden relative group">
                   <img
@@ -265,11 +320,11 @@ const Index = () => {
         </div>
       ) : (
         <>
-          <section id="bio" className="pt-32 pb-24 min-h-screen flex items-center">
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <section id="bio" className="pt-24 sm:pt-32 pb-12 sm:pb-24 min-h-screen flex items-center">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
                 <div className="animate-fade-in">
-                  <h2 className="text-6xl font-light mb-8 leading-tight">
+                  <h2 className="text-4xl sm:text-6xl font-light mb-6 sm:mb-8 leading-tight">
                     Алиса<br />Меликова
                   </h2>
                   <div className="w-20 h-px bg-gray-900 mb-8"></div>
@@ -321,12 +376,12 @@ const Index = () => {
             </div>
           </section>
 
-          <section id="portfolio" className="py-24 min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-6">
-              <h2 className="text-5xl font-light mb-4">Портфолио</h2>
+          <section id="portfolio" className="py-12 sm:py-24 min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <h2 className="text-3xl sm:text-5xl font-light mb-4">Портфолио</h2>
               <div className="w-20 h-px bg-gray-900 mb-16"></div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                 {projects.map((project, index) => (
                   <Card
                     key={project.id}
@@ -355,9 +410,9 @@ const Index = () => {
             </div>
           </section>
 
-          <section id="contacts" className="py-24 min-h-screen flex items-center">
-            <div className="max-w-3xl mx-auto px-6 w-full">
-              <h2 className="text-5xl font-light mb-4">Контакты</h2>
+          <section id="contacts" className="py-12 sm:py-24 min-h-screen flex items-center">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 w-full">
+              <h2 className="text-3xl sm:text-5xl font-light mb-4">Контакты</h2>
               <div className="w-20 h-px bg-gray-900 mb-16"></div>
 
               <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
