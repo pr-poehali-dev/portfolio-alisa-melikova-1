@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Card } from '@/components/ui/card';
@@ -65,6 +65,11 @@ const projects = [
 const Index = () => {
   const [activeSection, setActiveSection] = useState<'bio' | 'portfolio' | 'contacts'>('bio');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [bioPhoto, setBioPhoto] = useState('https://cdn.poehali.dev/projects/c7902632-2ef1-44a0-8709-52591db735a8/files/749acd74-23a3-4b27-a87a-733a0d98e9f8.jpg');
+  const [projectPhotos, setProjectPhotos] = useState<Record<string, string[]>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingFor, setUploadingFor] = useState<{type: 'bio' | 'project', projectId?: string, photoIndex?: number} | null>(null);
 
   const scrollToSection = (section: 'bio' | 'portfolio' | 'contacts') => {
     setActiveSection(section);
@@ -80,8 +85,47 @@ const Index = () => {
 
   const currentProject = projects.find(p => p.id === selectedProject);
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      
+      if (uploadingFor?.type === 'bio') {
+        setBioPhoto(result);
+      } else if (uploadingFor?.type === 'project' && uploadingFor.projectId && uploadingFor.photoIndex !== undefined) {
+        setProjectPhotos(prev => ({
+          ...prev,
+          [uploadingFor.projectId!]: [
+            ...(prev[uploadingFor.projectId!] || []),
+          ].map((photo, idx) => idx === uploadingFor.photoIndex ? result : photo)
+        }));
+      }
+      setUploadingFor(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerUpload = (type: 'bio' | 'project', projectId?: string, photoIndex?: number) => {
+    setUploadingFor({type, projectId, photoIndex});
+    fileInputRef.current?.click();
+  };
+
+  const getProjectPhotos = (projectId: string) => {
+    return projectPhotos[projectId] || Array(6).fill(projects.find(p => p.id === projectId)?.cover);
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept="image/*"
+        className="hidden"
+      />
       <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
@@ -94,6 +138,15 @@ const Index = () => {
             >
               АЛИСА МЕЛИКОВА
             </h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditMode(!editMode)}
+              className="ml-auto mr-4"
+            >
+              <Icon name={editMode ? 'Check' : 'Edit'} size={18} />
+              <span className="ml-2">{editMode ? 'Готово' : 'Редактировать'}</span>
+            </Button>
             <div className="flex gap-12">
               <button
                 onClick={() => scrollToSection('bio')}
@@ -136,13 +189,24 @@ const Index = () => {
             </p>
 
             <div className="grid grid-cols-2 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((num) => (
-                <div key={num} className="aspect-[4/3] bg-gray-100 rounded-sm overflow-hidden">
+              {getProjectPhotos(currentProject.id).map((photo, index) => (
+                <div key={index} className="aspect-[4/3] bg-gray-100 rounded-sm overflow-hidden relative group">
                   <img
-                    src={currentProject.cover}
-                    alt={`${currentProject.title} - Фото ${num}`}
+                    src={photo}
+                    alt={`${currentProject.title} - Фото ${index + 1}`}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                   />
+                  {editMode && (
+                    <button
+                      onClick={() => triggerUpload('project', currentProject.id, index)}
+                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    >
+                      <div className="text-white text-center">
+                        <Icon name="Upload" size={24} className="mx-auto mb-1" />
+                        <span className="text-xs">Загрузить</span>
+                      </div>
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -166,14 +230,25 @@ const Index = () => {
                     так и в кинематографе.
                   </p>
                 </div>
-                <div className="animate-scale-in">
+                <div className="animate-scale-in relative group">
                   <div className="aspect-[3/4] bg-gray-100 rounded-sm overflow-hidden">
                     <img
-                      src="https://cdn.poehali.dev/projects/c7902632-2ef1-44a0-8709-52591db735a8/files/749acd74-23a3-4b27-a87a-733a0d98e9f8.jpg"
+                      src={bioPhoto}
                       alt="Алиса Меликова"
                       className="w-full h-full object-cover"
                     />
                   </div>
+                  {editMode && (
+                    <button
+                      onClick={() => triggerUpload('bio')}
+                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    >
+                      <div className="text-white text-center">
+                        <Icon name="Upload" size={32} className="mx-auto mb-2" />
+                        <span className="text-sm">Загрузить фото</span>
+                      </div>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
