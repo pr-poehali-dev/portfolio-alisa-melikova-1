@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Card } from '@/components/ui/card';
@@ -62,17 +62,34 @@ const projects = [
   }
 ];
 
+const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
 const Index = () => {
   const [activeSection, setActiveSection] = useState<'bio' | 'portfolio' | 'contacts'>('bio');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [bioPhoto, setBioPhoto] = useState('https://cdn.poehali.dev/projects/c7902632-2ef1-44a0-8709-52591db735a8/files/749acd74-23a3-4b27-a87a-733a0d98e9f8.jpg');
-  const [bioText, setBioText] = useState({
-    subtitle: 'Российский художник, живущая и работающая в Москве.',
-    description: 'Активно сотрудничает с ведущими режиссерами. Работы как в театральных постановках, так и в кинематографе.'
-  });
-  const [projectPhotos, setProjectPhotos] = useState<Record<string, string[]>>({});
-  const [projectDescriptions, setProjectDescriptions] = useState<Record<string, string>>({});
+  const [bioPhoto, setBioPhoto] = useState(() => 
+    loadFromStorage('bioPhoto', 'https://cdn.poehali.dev/projects/c7902632-2ef1-44a0-8709-52591db735a8/files/749acd74-23a3-4b27-a87a-733a0d98e9f8.jpg')
+  );
+  const [bioText, setBioText] = useState(() => 
+    loadFromStorage('bioText', {
+      subtitle: 'Российский художник, живущая и работающая в Москве.',
+      description: 'Активно сотрудничает с ведущими режиссерами. Работы как в театральных постановках, так и в кинематографе.'
+    })
+  );
+  const [projectPhotos, setProjectPhotos] = useState<Record<string, string[]>>(() => 
+    loadFromStorage('projectPhotos', {})
+  );
+  const [projectDescriptions, setProjectDescriptions] = useState<Record<string, string>>(() => 
+    loadFromStorage('projectDescriptions', {})
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingFor, setUploadingFor] = useState<{type: 'bio' | 'project', projectId?: string, photoIndex?: number} | null>(null);
 
@@ -130,6 +147,17 @@ const Index = () => {
     setProjectDescriptions(prev => ({ ...prev, [projectId]: description }));
   };
 
+  const saveAllData = () => {
+    localStorage.setItem('bioPhoto', JSON.stringify(bioPhoto));
+    localStorage.setItem('bioText', JSON.stringify(bioText));
+    localStorage.setItem('projectPhotos', JSON.stringify(projectPhotos));
+    localStorage.setItem('projectDescriptions', JSON.stringify(projectDescriptions));
+  };
+
+  useEffect(() => {
+    saveAllData();
+  }, [bioPhoto, bioText, projectPhotos, projectDescriptions]);
+
   return (
     <div className="min-h-screen bg-white">
       <input
@@ -151,15 +179,16 @@ const Index = () => {
             >
               АЛИСА МЕЛИКОВА
             </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditMode(!editMode)}
-              className="ml-auto mr-4"
-            >
-              <Icon name={editMode ? 'Check' : 'Edit'} size={18} />
-              <span className="ml-2">{editMode ? 'Готово' : 'Редактировать'}</span>
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditMode(!editMode)}
+              >
+                <Icon name={editMode ? 'Check' : 'Edit'} size={18} />
+                <span className="ml-2">{editMode ? 'Готово' : 'Редактировать'}</span>
+              </Button>
+            </div>
             <div className="flex gap-12">
               <button
                 onClick={() => scrollToSection('bio')}
