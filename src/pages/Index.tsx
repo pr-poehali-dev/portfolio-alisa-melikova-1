@@ -67,7 +67,12 @@ const Index = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [bioPhoto, setBioPhoto] = useState('https://cdn.poehali.dev/projects/c7902632-2ef1-44a0-8709-52591db735a8/files/749acd74-23a3-4b27-a87a-733a0d98e9f8.jpg');
+  const [bioText, setBioText] = useState({
+    subtitle: 'Российский художник, живущая и работающая в Москве.',
+    description: 'Активно сотрудничает с ведущими режиссерами. Работы как в театральных постановках, так и в кинематографе.'
+  });
   const [projectPhotos, setProjectPhotos] = useState<Record<string, string[]>>({});
+  const [projectDescriptions, setProjectDescriptions] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingFor, setUploadingFor] = useState<{type: 'bio' | 'project', projectId?: string, photoIndex?: number} | null>(null);
 
@@ -115,6 +120,14 @@ const Index = () => {
 
   const getProjectPhotos = (projectId: string) => {
     return projectPhotos[projectId] || Array(6).fill(projects.find(p => p.id === projectId)?.cover);
+  };
+
+  const getProjectDescription = (projectId: string) => {
+    return projectDescriptions[projectId] || projects.find(p => p.id === projectId)?.description || '';
+  };
+
+  const updateProjectDescription = (projectId: string, description: string) => {
+    setProjectDescriptions(prev => ({ ...prev, [projectId]: description }));
   };
 
   return (
@@ -184,9 +197,18 @@ const Index = () => {
             </Button>
 
             <h2 className="text-5xl font-light mb-8">{currentProject.title}</h2>
-            <p className="text-lg text-gray-600 mb-16 max-w-3xl leading-relaxed">
-              {currentProject.description}
-            </p>
+            {editMode ? (
+              <Textarea
+                value={getProjectDescription(currentProject.id)}
+                onChange={(e) => updateProjectDescription(currentProject.id, e.target.value)}
+                className="text-lg mb-16 max-w-3xl border-gray-300 min-h-[120px]"
+                placeholder="Описание спектакля..."
+              />
+            ) : (
+              <p className="text-lg text-gray-600 mb-16 max-w-3xl leading-relaxed">
+                {getProjectDescription(currentProject.id)}
+              </p>
+            )}
 
             <div className="grid grid-cols-2 gap-8">
               {getProjectPhotos(currentProject.id).map((photo, index) => (
@@ -222,13 +244,29 @@ const Index = () => {
                     Алиса<br />Меликова
                   </h2>
                   <div className="w-20 h-px bg-gray-900 mb-8"></div>
-                  <p className="text-xl text-gray-700 leading-relaxed mb-6">
-                    Российский художник, живущая и работающая в Москве.
-                  </p>
-                  <p className="text-lg text-gray-600 leading-relaxed">
-                    Активно сотрудничает с ведущими режиссерами. Работы как в театральных постановках, 
-                    так и в кинематографе.
-                  </p>
+                  {editMode ? (
+                    <>
+                      <Input
+                        value={bioText.subtitle}
+                        onChange={(e) => setBioText(prev => ({ ...prev, subtitle: e.target.value }))}
+                        className="text-xl mb-6 border-gray-300 h-auto py-3"
+                      />
+                      <Textarea
+                        value={bioText.description}
+                        onChange={(e) => setBioText(prev => ({ ...prev, description: e.target.value }))}
+                        className="text-lg border-gray-300 min-h-[100px]"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+                        {bioText.subtitle}
+                      </p>
+                      <p className="text-lg text-gray-600 leading-relaxed">
+                        {bioText.description}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="animate-scale-in relative group">
                   <div className="aspect-[3/4] bg-gray-100 rounded-sm overflow-hidden">
